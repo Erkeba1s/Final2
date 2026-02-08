@@ -21,7 +21,8 @@ app.use("/api/profile", profileRoutes);
 app.use("/api/saved-jobs", savedJobRoutes);
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend", "index.html"));
+  res.sendFile(path.join(__dirname, "frontend", "index.html"));
+
 });
 
 app.get("/profile", (req, res) => {
