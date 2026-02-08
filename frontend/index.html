@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>JobFinder — Home</title>
+  <link rel="stylesheet" href="main.css" />
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar neu">
+      <div class="brand">
+        <div class="logo">JF</div>
+        <div class="brand-text">
+          <div class="brand-title">JobFinder</div>
+          <div class="brand-sub">employer • seeker • external</div>
+        </div>
+      </div>
+
+      <div class="search neu-in">
+        <span class="search-ic">⌕</span>
+        <input id="q" type="text" placeholder="What job are you looking for?" />
+        <button class="chip neu" onclick="loadJobs()">Search</button>
+      </div>
+
+      <div class="actions">
+        <button class="icon-btn neu" title="Notifications">🔔</button>
+        <a class="icon-btn neu" title="Profile" href="./pages/auth/register.html">👤</a>
+      </div>
+    </header>
+
+    <section class="hero grid-2">
+      <div class="hero-card neu">
+        <div class="hero-badge neu-in">
+          <span class="dot"></span>
+          Featured employer jobs
+        </div>
+
+        <h1>Make job search <span class="glow">easier</span></h1>
+        <p class="muted">
+          Employers publish internal vacancies, while seekers can also explore
+          external job listings. Internal jobs are always highlighted.
+        </p>
+
+        <div class="hero-cta">
+          <a class="btn neu" href="#jobs">View jobs</a>
+          <a class="btn btn-ghost neu" href="#how">How it works</a>
+        </div>
+
+        <div class="stats">
+          <div class="stat neu-in">
+            <div class="stat-n">240+</div>
+            <div class="stat-l">internal jobs</div>
+          </div>
+          <div class="stat neu-in">
+            <div class="stat-n">1.2k+</div>
+            <div class="stat-l">external jobs</div>
+          </div>
+          <div class="stat neu-in">
+            <div class="stat-n">98%</div>
+            <div class="stat-l">match rate</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="hero-side neu">
+        <div class="side-header">
+          <div class="side-title">Our offers</div>
+          <div class="side-pill neu-in">internal first</div>
+        </div>
+
+        <div class="mini-list" id="offersList">
+        </div>
+
+        <div class="side-footer neu-in">
+          <div class="muted">Employers can highlight their vacancies.</div>
+          <a class="link" href="#">Create job →</a>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="how grid-3">
+      <div class="how-card neu">
+        <div class="how-ic neu-in">🏢</div>
+        <h3>Employer</h3>
+        <p class="muted">
+          Create and publish vacancies. Internal jobs are highlighted.
+        </p>
+      </div>
+
+      <div class="how-card neu">
+        <div class="how-ic neu-in">👤</div>
+        <h3>Seeker</h3>
+        <p class="muted">
+          Build a profile, search jobs, save and apply.
+        </p>
+      </div>
+
+      <div class="how-card neu">
+        <div class="how-ic neu-in">🪐</div>
+        <h3>External</h3>
+        <p class="muted">
+          Jobs from partner APIs are also available.
+        </p>
+      </div>
+    </section>
+
+    <section id="jobs" class="jobs neu">
+      <div class="section-head">
+        <div>
+          <h2>Job listings</h2>
+          <p class="muted">External jobs loaded from Remotive API (backend proxy).</p>
+        </div>
+
+        <div class="filters">
+          <select class="select neu-in">
+            <option>All</option>
+            <option>Internal</option>
+            <option>External</option>
+            <option>Featured</option>
+          </select>
+          <select class="select neu-in">
+            <option>Location</option>
+            <option>Almaty</option>
+            <option>Astana</option>
+            <option>Remote</option>
+          </select>
+          <button class="icon-btn neu">⇅</button>
+        </div>
+      </div>
+
+      <div class="cards" id="cards">
+        <article class="job-card neu-in featured internal">
+          <div class="job-top">
+            <div class="badges">
+              <span class="badge badge-internal">INTERNAL</span>
+              <span class="badge badge-featured">FEATURED</span>
+            </div>
+            <button class="save neu">＋</button>
+          </div>
+
+          <h3>Backend Developer (Node.js)</h3>
+          <div class="job-meta">TechSoft • Almaty • Full-time</div>
+          <p class="muted">
+            Express, MongoDB and JWT with modular architecture.
+          </p>
+
+          <div class="job-bottom">
+            <div class="pill neu">$1200–2000</div>
+            <a class="btn-sm neu" href="#">Details</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <nav class="bottom-nav neu">
+      <a class="nav-item active neu-in" href="#"><span class="nav-ic">⌂</span><span>Home</span></a>
+      <a class="nav-item neu-in" href="#jobs"><span class="nav-ic">▦</span><span>Jobs</span></a>
+      <a class="nav-item neu-in" href="#how"><span class="nav-ic">✦</span><span>How</span></a>
+      <a id="navProfile" class="nav-item neu-in" href="#"><span class="nav-ic">👤</span><span>Profile</span></a>
+    </nav>
+
+    <footer class="footer">
+      <div class="muted">
+        JobFinder • demo layout • Jobs powered by Remotive
+      </div>
+    </footer>
+  </div>
+
+  <script>
+    function escapeHTML(s) {
+      return String(s || "").replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[c]));
+    }
+
+    async function loadJobs() {
+      const input1 = document.getElementById("search");
+      const input2 = document.getElementById("q");
+
+      const q =
+        (input2 && input2.value.trim()) ||
+        (input1 && input1.value.trim()) ||
+        "";
+
+      if (!q) return;
+
+      const cards = document.getElementById("cards");
+      cards.innerHTML = `
+        <div class="muted">Loading jobs for "${escapeHTML(q)}"...</div>
+      `;
+
+      try {
+        const res = await fetch(`/api/jobs?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+
+        const jobs = data.jobs || [];
+
+        if (!jobs.length) {
+          cards.innerHTML = `<div class="muted">No jobs found.</div>`;
+          document.getElementById("jobs").scrollIntoView({ behavior: "smooth" });
+          return;
+        }
+
+        cards.innerHTML = jobs.map(j => `
+          <article class="job-card neu-in external">
+            <div class="job-top">
+              <div class="badges">
+                <span class="badge badge-external">EXTERNAL</span>
+              </div>
+              <button class="save neu" title="Save (demo)">＋</button>
+            </div>
+
+            <h3>${escapeHTML(j.title)}</h3>
+            <div class="job-meta">
+              ${escapeHTML(j.company)} • ${escapeHTML(j.location || "Remote")}
+              ${j.type ? " • " + escapeHTML(j.type) : ""}
+            </div>
+
+            <p class="muted">
+              ${j.tags && j.tags.length ? escapeHTML(j.tags.slice(0, 6).join(", ")) : "—"}
+            </p>
+
+            <div class="job-bottom">
+              <div class="pill neu">Remote</div>
+              <a class="btn-sm neu" href="${escapeHTML(j.url)}" target="_blank" rel="noreferrer">Apply ↗</a>
+            </div>
+          </article>
+        `).join("");
+
+        document.getElementById("jobs").scrollIntoView({ behavior: "smooth" });
+      } catch (e) {
+        cards.innerHTML = `<div class="muted">Error loading jobs.</div>`;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const a = document.getElementById("search");
+      const b = document.getElementById("q");
+
+      if (a) a.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") loadJobs();
+      });
+      if (b) b.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") loadJobs();
+      });
+    });
+  </script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const el = document.getElementById('navProfile');
+      if (!el) return;
+      el.addEventListener('click', (e) => {
+        e.preventDefault();
+        const token = localStorage.getItem('token') || '';
+        const role = localStorage.getItem('role') || '';
+        if (!token) { window.location.href = '/profile'; return; }
+        if (role === 'employer') { window.location.href = '/profile'; return; }
+        if (role === 'seeker') { window.location.href = 'pages/seeker/s.profile.html'; return; }
+        window.location.href = '/profile';
+      });
+    });
+  </script>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

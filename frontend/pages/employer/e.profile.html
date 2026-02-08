@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Profile — JobFinder</title>
+  <link rel="stylesheet" href="../../main.css" />
+  <style>
+    .vacancy-form { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+    .vacancy-form textarea { grid-column: 1 / -1; }
+    .vacancy-form input, .vacancy-form textarea { padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.05); color: var(--text); font-family: inherit; }
+    .vacancy-form textarea { resize: vertical; min-height: 80px; }
+    .btn-create { grid-column: 1 / -1; padding: 12px 16px; }
+    .vacancy-item { padding: 14px; border-radius: 14px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 10px; }
+    .vacancy-content { flex: 1; }
+    .vacancy-title { font-weight: 800; margin-bottom: 4px; }
+    .vacancy-meta { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
+    .vacancy-desc { font-size: 12px; color: var(--muted); }
+    .btn-action { padding: 8px 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.10); background: rgba(255,255,255,0.06); color: var(--text); cursor: pointer; font-weight: 700; font-size: 12px; transition: all 0.2s; }
+    .btn-action:hover { background: rgba(255,255,255,0.12); }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="auth-box neu" style="max-width: 860px;">
+            <a class="brand home-link" href="../../index.html">
+        <div class="logo">JF</div>
+        <div class="brand-text">
+          <div class="brand-title">JobFinder</div>
+          <div class="brand-sub">employer • seeker • external</div>
+        </div>
+      </a>
+      
+      <h2>My Profile</h2>
+      <p class="muted" id="roleLine">Loading...</p>
+
+      <div id="profileBox" class="neu-in" style="padding:16px; border-radius:18px; margin-bottom:16px;">
+        <div class="muted">Loading...</div>
+      </div>
+
+      <div id="employerSection" style="display:none;">
+        <h3 style="margin-top:20px; margin-bottom:12px;">Add Vacancy</h3>
+        <form class="vacancy-form" id="vacancyForm">
+          <input id="vId" type="hidden" />
+          <input id="vTitle" type="text" placeholder="Job Title" required>
+          <input id="vCompany" type="text" placeholder="Company Name" required>
+          <input id="vLocation" type="text" placeholder="Location" required>
+          <input id="vSalary" type="text" placeholder="Salary Range" required>
+          <textarea id="vDescription" placeholder="Job Description" required></textarea>
+          <button class="btn btn-create neu" id="vSubmit" type="submit">Create Vacancy</button>
+          <p class="muted" id="vacancyMsg" style="margin-top:10px; text-align:center;"></p>
+        </form>
+
+        <h3 style="margin-top:20px; margin-bottom:12px;">My Vacancies</h3>
+        <div id="vacancyList" style="display:grid; gap:10px;">
+          <div class="muted">Loading...</div>
+        </div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <button class="btn neu" id="logoutBtn" type="button">Logout</button>
+        <button class="btn neu" id="deleteAccountBtn" type="button">Delete account</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));}
+
+    function getToken() {
+      return localStorage.getItem("token") || "";
+    }
+
+    async function api(path, { method = "GET", body } = {}) {
+      const token = getToken();
+      const headers = { "Content-Type": "application/json", Authorization: "Bearer " + token };
+      const res = await fetch(path, {
+        method,
+        headers,
+        body: body ? JSON.stringify(body) : undefined
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Request failed");
+      return data;
+    }
+
+    async function loadProfile() {
+      const token = getToken();
+      if (!token) {
+        window.location.href = "/pages/auth/login.html";
+        return;
+      }
+
+      const roleLine = document.getElementById("roleLine");
+      const box = document.getElementById("profileBox");
+
+      try {
+        const data = await api("/api/profile/me");
+        const u = data.user;
+        roleLine.textContent = "Role: " + u.role;
+        box.innerHTML = `
+          <div><strong>Name:</strong> ${esc(u.name)}</div>
+          <div><strong>Email:</strong> ${esc(u.email)}</div>
+          <div><strong>Joined:</strong> ${esc(new Date(u.createdAt).toLocaleDateString())}</div>
+        `;
+
+        if (u.role === "employer") {
+          document.getElementById("employerSection").style.display = "block";
+          loadMyVacancies();
+        }
+      } catch (e) {
+        roleLine.textContent = "Error";
+        box.innerHTML = `<div class="muted">${esc(e.message || "Error")}</div>`;
+      }
+    }
+
+    function renderVacancies(list, jobs) {
+      if (!jobs.length) {
+        list.innerHTML = `<div class="muted">No vacancies yet.</div>`;
+        return;
+      }
+      list.innerHTML = jobs.map(j => `
+        <div class="vacancy-item">
+          <div class="vacancy-content">
+            <div class="vacancy-title">${esc(j.title)}</div>
+            <div class="vacancy-meta">${esc(j.company)} • ${esc(j.location)} • ${esc(j.salary)}</div>
+            <div class="vacancy-desc">${esc(j.description.substring(0, 80))}${j.description.length > 80 ? '...' : ''}</div>
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button type="button" class="edit-job btn-action neu" data-id="${esc(j._id || j.id)}" title="Edit">Edit</button>
+            <button type="button" class="delete-job btn-action neu" data-id="${esc(j._id || j.id)}" title="Delete">Delete</button>
+          </div>
+        </div>
+      `).join("");
+
+      list.querySelectorAll('.delete-job').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const msg = document.getElementById("vacancyMsg");
+          const id = btn.getAttribute('data-id');
+          if (!confirm('Delete this vacancy?')) return;
+          try {
+            await api(`/api/jobs/${encodeURIComponent(id)}`, { method: 'DELETE' });
+            if (msg) msg.textContent = "Vacancy deleted.";
+            loadMyVacancies();
+          } catch (err) {
+            if (msg) msg.textContent = err.message || "Failed to delete.";
+          }
+        });
+      });
+
+      list.querySelectorAll('.edit-job').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          const id = btn.getAttribute('data-id');
+          const job = jobs.find(x => String(x._id || x.id) === String(id));
+          if (!job) return;
+          document.getElementById("vId").value = job._id || job.id || "";
+          document.getElementById("vTitle").value = job.title || "";
+          document.getElementById("vCompany").value = job.company || "";
+          document.getElementById("vLocation").value = job.location || "";
+          document.getElementById("vSalary").value = job.salary || "";
+          document.getElementById("vDescription").value = job.description || "";
+          document.getElementById("vSubmit").textContent = "Update Vacancy";
+          document.getElementById("vTitle").focus();
+        });
+      });
+    }
+
+    async function loadMyVacancies() {
+      const list = document.getElementById("vacancyList");
+      try {
+        const data = await api("/api/jobs/mine");
+        renderVacancies(list, data.jobs || []);
+      } catch (e) {
+        list.innerHTML = `<div class="muted">${esc(e.message || "Error")}</div>`;
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+      loadProfile();
+
+      const form = document.getElementById("vacancyForm");
+      if (!form) return;
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const msg = document.getElementById("vacancyMsg");
+        msg.textContent = "Creating...";
+
+        const payload = {
+          title: document.getElementById("vTitle").value.trim(),
+          company: document.getElementById("vCompany").value.trim(),
+          location: document.getElementById("vLocation").value.trim(),
+          salary: document.getElementById("vSalary").value.trim(),
+          description: document.getElementById("vDescription").value.trim()
+        };
+
+        try {
+          const id = document.getElementById("vId").value.trim();
+          if (id) {
+            await api(`/api/jobs/${encodeURIComponent(id)}`, { method: "PUT", body: payload });
+            msg.textContent = "Vacancy updated.";
+          } else {
+            await api("/api/jobs", { method: "POST", body: payload });
+            msg.textContent = "Vacancy created.";
+          }
+          form.reset();
+          document.getElementById("vId").value = "";
+          document.getElementById("vSubmit").textContent = "Create Vacancy";
+          loadMyVacancies();
+        } catch (e) {
+          msg.textContent = e.message || "Failed to create vacancy";
+        }
+      });
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("user");
+      window.location.href = "/pages/auth/login.html";
+    });
+
+    document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
+      if (!confirm("Delete your account? This cannot be undone.")) return;
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("/api/profile/me", {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          alert(data.message || "Failed to delete account.");
+          return;
+        }
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("user");
+        window.location.href = "/pages/auth/register.html";
+      } catch (e) {
+        alert("Failed to delete account.");
+      }
+    });
+  </script>
+</body>
+</html>

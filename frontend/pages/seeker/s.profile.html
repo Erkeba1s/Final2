@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>My Profile — JobFinder</title>
+  <link rel="stylesheet" href="../../main.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="auth-box neu" style="max-width: 720px;">
+      <h2>My Profile</h2>
+      <p class="muted">Saved data from MongoDB</p>
+
+      <div id="box" class="neu-in" style="padding:16px; border-radius:18px;">
+        <div class="muted">Loading...</div>
+      </div>
+
+      <div id="savedBox" class="neu-in" style="padding:16px; border-radius:18px; margin-top:16px;">
+        <h3 style="margin-top:0;">Saved jobs</h3>
+        <div id="savedList" class="muted">Loading...</div>
+      </div>
+
+      <div style="display:flex; gap:10px; margin-top:12px;">
+        <a class="btn neu" href="../../index.html#jobs">Find jobs</a>
+        <a class="btn neu" href="./edit-s.profile.html">Edit</a>
+        <button class="btn neu" id="logoutBtn" type="button">Logout</button>
+        <button class="btn neu" id="deleteAccountBtn" type="button">Delete account</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));}
+    function getLocalUser() {
+      try { return JSON.parse(localStorage.getItem("user") || "null"); } catch { return null; }
+    }
+    function getLocalProfile() {
+      try { return JSON.parse(localStorage.getItem("candidateProfile") || "null"); } catch { return null; }
+    }
+
+    async function loadProfile() {
+      const token = localStorage.getItem("token");
+      const box = document.getElementById("box");
+      const savedList = document.getElementById("savedList");
+
+      if (!token) {
+        const localUser = getLocalUser();
+        const localProfile = getLocalProfile();
+        if (localUser) {
+          const p = { ...(localProfile || {}), ...(localUser.profile || {}) };
+          box.innerHTML = `
+            <h3 style="margin-top:0;">${esc(localUser.name || "Unnamed")}</h3>
+            <div class="muted">${esc(localUser.email || "")}</div>
+            <div class="muted">Role: ${esc(localUser.role || "")}</div>
+            ${
+              localUser.role === "candidate"
+                ? `
+            <div style="margin-top:10px;">
+              <div class="muted"><strong>Candidate info</strong></div>
+              <div class="muted">Full name: ${esc(p.fullName || "")}</div>
+              <div class="muted">Title: ${esc(p.title || "")}</div>
+              <div class="muted">Location: ${esc(p.location || "")}</div>
+              <div class="muted">Bio: ${esc(p.bio || "")}</div>
+              <div class="muted">Skills: ${esc((p.skills || []).join(", "))}</div>
+            </div>
+            `
+                : ""
+            }
+          `;
+          savedList.innerHTML = `<div class="muted">No token. Please login.</div>`;
+          return;
+        }
+        box.innerHTML = `<div class="muted">No token. Please login.</div>`;
+        savedList.innerHTML = `<div class="muted">No token. Please login.</div>`;
+        return;
+      }
+
+      const res = await fetch("/api/profile/me", {
+        headers: { Authorization: "Bearer " + token }
+      });
+
+      const data = await res.json().catch(() => ({}));
+      const localUser = getLocalUser();
+      const localProfile = getLocalProfile();
+
+      if (!res.ok) {
+        if (localUser) {
+          const p = { ...(localProfile || {}), ...(localUser.profile || {}) };
+          box.innerHTML = `
+            <h3 style="margin-top:0;">${esc(localUser.name || "Unnamed")}</h3>
+            <div class="muted">${esc(localUser.email || "")}</div>
+            <div class="muted">Role: ${esc(localUser.role || "")}</div>
+            ${
+              localUser.role === "candidate"
+                ? `
+            <div style="margin-top:10px;">
+              <div class="muted"><strong>Candidate info</strong></div>
+              <div class="muted">Full name: ${esc(p.fullName || "")}</div>
+              <div class="muted">Title: ${esc(p.title || "")}</div>
+              <div class="muted">Location: ${esc(p.location || "")}</div>
+              <div class="muted">Bio: ${esc(p.bio || "")}</div>
+              <div class="muted">Skills: ${esc((p.skills || []).join(", "))}</div>
+            </div>
+            `
+                : ""
+            }
+          `;
+          return;
+        }
+        box.innerHTML = `<div class="muted">${esc(data.message || "Error")}</div>`;
+        return;
+      }
+
+      let u = data.user || localUser || {};
+      const mergedProfile = {
+        ...(localProfile || {}),
+        ...((localUser && localUser.profile) || {}),
+        ...(u.profile || {})
+      };
+      const role = u.role || (localUser && localUser.role) || localStorage.getItem("role") || "";
+      u = { ...(localUser || {}), ...u, role, profile: mergedProfile };
+      const p = u.profile || {};
+      box.innerHTML = `
+        <h3 style="margin-top:0;">${esc(u.name || "Unnamed")}</h3>
+        <div class="muted">${esc(u.email || "")}</div>
+        <div class="muted">Role: ${esc(u.role || "")}</div>
+        ${
+          u.role === "candidate"
+            ? `
+        <div style="margin-top:10px;">
+          <div class="muted"><strong>Candidate info</strong></div>
+          <div class="muted">Full name: ${esc(p.fullName || "")}</div>
+          <div class="muted">Title: ${esc(p.title || "")}</div>
+          <div class="muted">Location: ${esc(p.location || "")}</div>
+          <div class="muted">Bio: ${esc(p.bio || "")}</div>
+          <div class="muted">Skills: ${esc((p.skills || []).join(", "))}</div>
+        </div>
+        `
+            : ""
+        }
+      `;
+
+      const savedRes = await fetch("/api/saved-jobs", {
+        headers: { Authorization: "Bearer " + token }
+      });
+      const savedData = await savedRes.json().catch(() => ({}));
+      if (!savedRes.ok) {
+        savedList.innerHTML = `<div class="muted">${esc(savedData.message || "Error")}</div>`;
+        return;
+      }
+
+      const items = savedData.items || [];
+      if (!items.length) {
+        savedList.innerHTML = `<div class="muted">No saved jobs.</div>`;
+        return;
+      }
+
+      savedList.innerHTML = items.map((i) => {
+        if (!i.job) {
+          return `<div class="muted" style="padding:8px 0;">Not found</div>`;
+        }
+        return `
+          <div style="padding:8px 0;">
+            <div><strong>${esc(i.job.title)}</strong></div>
+            <div class="muted">${esc(i.job.company)} • ${esc(i.job.location)} • ${esc(i.job.salary)}</div>
+            <a class="link" href="../Job/details.html?id=${encodeURIComponent(i.job._id)}">Open</a>
+          </div>
+        `;
+      }).join("");
+    }
+
+    loadProfile();
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+      localStorage.removeItem("token");
+      localStorage.removeItem("role");
+      localStorage.removeItem("user");
+      window.location.href = "/pages/auth/login.html";
+    });
+
+    document.getElementById("deleteAccountBtn").addEventListener("click", async () => {
+      if (!confirm("Delete your account? This cannot be undone.")) return;
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        const res = await fetch("/api/profile/me", {
+          method: "DELETE",
+          headers: { Authorization: "Bearer " + token }
+        });
+        if (!res.ok) {
+          const data = await res.json().catch(() => ({}));
+          alert(data.message || "Failed to delete account.");
+          return;
+        }
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        localStorage.removeItem("user");
+        window.location.href = "/pages/auth/register.html";
+      } catch (e) {
+        alert("Failed to delete account.");
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Register — JobFinder</title>
+  <link rel="stylesheet" href="../../main.css">
+</head>
+
+<body>
+  <div class="app">
+    <div class="auth-box neu">
+      <a class="brand home-link" href="../../index.html">
+        <div class="logo">JF</div>
+        <div class="brand-text">
+          <div class="brand-title">JobFinder</div>
+          <div class="brand-sub">employer • seeker • external</div>
+        </div>
+      </a>
+      <h2>Create account</h2>
+      <p class="muted">Choose your role</p>
+
+      <form class="auth-form" id="regForm">
+        <input class="neu-in" id="username" type="text" placeholder="Username" required>
+        <input class="neu-in" id="email" type="email" placeholder="Email" required>
+        <input class="neu-in" id="password" type="password" placeholder="Password" required>
+
+        <select class="select neu-in" id="role" required>
+          <option value="">Select role</option>
+          <option value="employer">Employer</option>
+          <option value="candidate">Candidate</option>
+        </select>
+
+        <div id="seekerFields" style="display:none; margin-top:12px;">
+          <input class="neu-in" id="fullName" type="text" placeholder="Full name (for candidates)">
+          <input class="neu-in" id="title" type="text" placeholder="Job title (e.g. Frontend Developer)">
+          <input class="neu-in" id="location" type="text" placeholder="Location (Almaty / Remote)">
+          <textarea class="neu-in" id="bio" placeholder="Short bio"></textarea>
+          <input class="neu-in" id="skills" type="text" placeholder="Skills (comma separated: JS, React, Node)">
+        </div>
+
+        <button class="btn neu" type="submit">Register</button>
+
+        <p class="muted" id="msg" style="margin-top:10px;"></p>
+      </form>
+
+      <div class="auth-footer">
+        <span class="muted">Already have an account?</span>
+        <a class="link" href="login.html">Login</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const roleSelect = document.getElementById("role");
+  const seekerFields = document.getElementById("seekerFields");
+  const form = document.getElementById("regForm");
+  const msg = document.getElementById("msg");
+
+  roleSelect.addEventListener("change", () => {
+    if (roleSelect.value === "candidate") {
+      seekerFields.style.display = "block";
+    } else {
+      seekerFields.style.display = "none";
+    }
+  });
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    msg.textContent = "Registering...";
+
+    const role = roleSelect.value;
+
+    const payload = {
+      username: document.getElementById("username").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      password: document.getElementById("password").value,
+      role
+    };
+
+    if (role === "candidate") {
+      payload.profile = {
+        fullName: document.getElementById("fullName").value.trim(),
+        title: document.getElementById("title").value.trim(),
+        location: document.getElementById("location").value.trim(),
+        bio: document.getElementById("bio").value.trim(),
+        skills: document.getElementById("skills").value
+          .split(",")
+          .map(s => s.trim())
+          .filter(Boolean)
+      };
+    }
+
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        msg.textContent = data.message || "Register failed";
+        return;
+      }
+
+      const apiUser = data.user || {};
+      const storedUser = {
+        name: apiUser.name || payload.username,
+        email: apiUser.email || payload.email,
+        role: apiUser.role || role,
+        profile: { ...(payload.profile || {}), ...(apiUser.profile || {}) }
+      };
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("role", role);
+      localStorage.setItem("user", JSON.stringify(storedUser));
+      if (role === "candidate") {
+        localStorage.setItem("candidateProfile", JSON.stringify(payload.profile || {}));
+      } else {
+        localStorage.removeItem("candidateProfile");
+      }
+      window.location.href =
+        role === "candidate" ? "/pages/seeker/s.profile.html" : "/profile";
+    } catch (err) {
+      msg.textContent = "Server error";
+    }
+  });
+});
+</script>
+
+
+
+  <script src="../../js/main.js"></script>
+</body>
+</html>
