@@ -13,7 +13,7 @@ const savedJobRoutes = require("./routes/r.svdJob");
 const app = express();
 
 app.use(express.json());
-app.use(express.static(path.join(__dirname, "../frontend")));
+app.use(express.static(path.join(__dirname, "frontend")));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/jobs", jobRoutes);
@@ -26,7 +26,7 @@ app.get("/", (req, res) => {
 });
 
 app.get("/profile", (req, res) => {
-  res.sendFile(path.join(__dirname, "../frontend", "profile.html"));
+  res.sendFile(path.join(__dirname, "frontend", "profile.html"));
 });
 
 app.use((err, req, res, next) => {
