@@ -1,12 +1,14 @@
 const express = require("express");
 const path = require("path");
-const connectDB = require("../config/db");
-const { PORT } = require("../config/env");
+const connectDB = require("./config/db");
+require("dotenv").config();
 
-const authRoutes = require("../routes/r.auth");
-const jobRoutes = require("../routes/r.job");
-const profileRoutes = require("../routes/r.profile");
-const savedJobRoutes = require("../routes/r.svdJob");
+const PORT = process.env.PORT || 5000;
+
+const authRoutes = require("./routes/r.auth");
+const jobRoutes = require("./routes/r.job");
+const profileRoutes = require("./routes/r.profile");
+const savedJobRoutes = require("./routes/r.svdJob");
 
 const app = express();
 
