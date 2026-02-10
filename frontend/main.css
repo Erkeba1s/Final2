@@ -77,7 +77,6 @@ p{margin:0}
   .grid-3{grid-template-columns:1fr}
 }
 
-/* ===== Topbar (thin + clean) ===== */
 .topbar{
   display:flex;
   gap:14px;
@@ -141,7 +140,7 @@ p{margin:0}
   border: 1px solid rgba(255,255,255,.08);
 }
 
-/* ===== Hero (image-like banner feel) ===== */
+
 .hero{margin-bottom: 18px}
 
 .hero-card{
@@ -154,8 +153,6 @@ p{margin:0}
     linear-gradient(180deg, rgba(0,0,0,.25), rgba(0,0,0,.55));
 }
 
-/* if you already have a background image on the hero via HTML inline style,
-   this overlay will make it look like screenshot */
 .hero-card::before{
   content:"";
   position:absolute;
@@ -220,7 +217,7 @@ p{margin:0}
 .stat-n{font-size: 18px; font-weight: 900}
 .stat-l{font-size:12px; color:var(--muted)}
 
-/* ===== Right side card ===== */
+
 .hero-side{padding: 16px}
 .side-header{display:flex; align-items:center; justify-content:space-between; margin-bottom: 12px}
 .side-title{font-weight: 900; letter-spacing:.2px}
@@ -266,7 +263,6 @@ p{margin:0}
 }
 .link{font-weight:900; opacity:.92}
 
-/* ===== Sections ===== */
 .how{margin-bottom: 18px}
 .how-card{padding: 14px}
 .how-ic{
@@ -277,7 +273,7 @@ p{margin:0}
   border: 1px solid rgba(255,255,255,.10);
 }
 
-/* ===== Jobs section (cards look like screenshot blocks) ===== */
+
 .jobs{padding: 16px; margin-bottom: 18px}
 .section-head{
   display:flex;
@@ -373,13 +369,13 @@ p{margin:0}
   color: var(--text);
 }
 
-/* soften special outlines */
+
 .job-card.internal{outline: 1px solid rgba(167,255,217,.14)}
 .job-card.external{outline: 1px solid rgba(169,199,255,.14)}
 .job-card.featured{outline: 1px solid rgba(246,226,167,.16)}
 .job-card.featured::before{display:none}
 
-/* ===== Bottom nav (glass bar) ===== */
+
 .bottom-nav{
   position: fixed;
   left: 50%;
@@ -425,7 +421,6 @@ p{margin:0}
   padding: 10px 0;
 }
 
-/* ===== Auth (same style) ===== */
 .auth-box{
   max-width: 380px;
   margin: 80px auto;
@@ -461,7 +456,7 @@ p{margin:0}
 }
 
 
-/* ===== Mobile responsiveness ===== */
+
 @media (max-width: 640px){
   .app{padding: 14px 14px 110px;}
 
